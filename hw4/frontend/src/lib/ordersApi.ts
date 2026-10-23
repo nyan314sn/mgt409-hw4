@@ -48,7 +48,14 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
     if ((err as Error).name === 'AbortError') throw err
     throw new ApiError(0, 'Can’t reach the shop server. Check your connection and try again.')
   }
-  const data = await res.json().catch(() => ({}))
+  // A request cancelled while its body is still arriving rejects here too; keep that a cancellation
+  // rather than turning it into an empty "successful" reply (which crashed the Cart page).
+  let parsed = true
+  const data = await res.json().catch((err: Error) => {
+    if (err.name === 'AbortError') throw err
+    parsed = false
+    return {}
+  })
   if (res.status === 409 && data?.detail?.quote) throw new CartChangedError(data.detail.message, data.detail.quote)
   if (res.status === 502 || res.status === 504) {  // the dev proxy: backend is down
     throw new ApiError(0, 'Can’t reach the shop server. Check your connection and try again.')
@@ -57,6 +64,7 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
     const detail = typeof data.detail === 'string' ? data.detail : 'Something went wrong. Please try again.'
     throw new ApiError(res.status, res.status >= 500 ? 'The shop server had a problem. Please try again.' : detail)
   }
+  if (!parsed && res.status !== 204) throw new ApiError(res.status, 'The shop server sent an unreadable reply. Please try again.')
   return data as T
 }
 
