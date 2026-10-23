@@ -1,0 +1,31 @@
+# Secrets - never commit. .env.example (names only) is committed.
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Front end (also covered by frontend/.gitignore)
+node_modules/
+frontend/dist/
+
+# Local-only data pack: database + product images are never committed.
+# Place them in hw4/data/ after cloning (see README "Data pack").
+data/
+data.zip
+*.db
+*.db-journal
+*.sqlite
+# The test fixture is a copy of the data pack's database; tests create it on first run.
+backend/tests/fixtures/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Campus Customs — Live App Check</title>
+<style>
+  :root {
+    --bg: #0b0a0e; --panel: #15131a; --line: #2a2631; --text: #f5f1f7; --muted: #b3abbd;
+    --pink: #ff4fa3; --pass: #4ade80;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text); line-height: 1.6;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 1100px; margin: 0 auto; padding: 40px 20px 80px; }
+  h1, h2 { font-family: Georgia, "Times New Roman", serif; line-height: 1.15; }
+  a { color: var(--pink); }
+  a:hover { color: var(--text); }
+  .two { align-items: start; }
+  h1 { font-size: clamp(2rem, 5vw, 2.8rem); margin: 0 0 8px; }
+  h1 span, .pink { color: var(--pink); }
+  .lede { color: var(--muted); max-width: 70ch; }
+  .meta { font-size: 0.9rem; color: var(--muted); }
+  .stripes { height: 10px; margin: 24px 0 32px; background:
+    linear-gradient(var(--pink), var(--pink)) 0 0 / 100% 3px no-repeat,
+    linear-gradient(var(--pink), var(--pink)) 0 7px / 100% 3px no-repeat; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 8px; font-size: 0.95rem; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  .pass { color: #0b0a0e; background: var(--pass); font-weight: 800; font-size: 0.78rem; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  section.check { margin-top: 56px; padding-top: 8px; border-top: 1px solid var(--line); }
+  .check h2 { font-size: 1.7rem; margin: 18px 0 6px; }
+  .num { display: inline-block; min-width: 2.2em; color: var(--pink); }
+  .ask { background: var(--panel); border-left: 3px solid var(--pink); padding: 10px 14px; border-radius: 0 10px 10px 0; margin: 14px 0; }
+  figure { margin: 22px 0; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+  figure a { display: block; }
+  figure img { display: block; width: 100%; height: auto; }
+  figcaption { padding: 14px 18px; font-size: 0.98rem; }
+  figcaption b { color: var(--pink); }
+  /* tall "add to cart" shot in a narrow column, wide cart page in a wide one */
+  .two { display: grid; grid-template-columns: 0.75fr 1.9fr; gap: 18px; }
+  .two figure { margin: 0; }
+  .evidence { font-size: 0.9rem; color: var(--muted); background: #0f0d13; border: 1px dashed var(--line); border-radius: 12px; padding: 12px 16px; }
+  .evidence code { color: var(--text); }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: 0.92em; }
+  footer { margin-top: 64px; color: var(--muted); font-size: 0.88rem; }
+  @media (max-width: 760px) { .two { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <p class="meta">Yale SOM MGT 409 · HW4 · Problem 11</p>
+  <h1>Campus Customs — <span>live app check</span></h1>
+  <p class="lede">
+    The running app (React front end on <code>localhost:5173</code>, FastAPI + PydanticAI agent on
+    <code>localhost:8000</code>, model <code>gpt-5.6-luna</code> via Portkey) was tested in Chrome, logged in as the
+    seeded test user. Every screenshot below is from that session; each check also lists what the database
+    said at the time, so the numbers on screen can be compared with the source of truth.
+  </p>
+  <p class="meta">Tested 22 Oct 2026, about 10:00–10:10 PM EDT. Click any screenshot to open it full size.</p>
+  <div class="stripes"></div>
+
+  <table>
+    <thead><tr><th>#</th><th>Check</th><th>What it proves</th><th>Result</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><a href="#inventory">Chat checks inventory & price</a></td><td>The assistant reads stock and price from <code>campus_customs.db</code> and reports them exactly, including a sold-out size.</td><td><span class="pass">PASS</span></td></tr>
+      <tr><td>2</td><td><a href="#cards">Search-result cards after "What hoodies do you have?"</a></td><td>A category question puts real product cards on the page (separate from the chat text), and a card opens its product page.</td><td><span class="pass">PASS</span></td></tr>
+      <tr><td>3</td><td><a href="#cart">Problem 9 feature: cart & reserve for pickup</a></td><td>Add to cart → cart re-priced live → reservation saved in the database with stock taken off.</td><td><span class="pass">PASS</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- ===================================================================== 1 -->
+  <section class="check" id="inventory">
+    <h2><span class="num">01</span>Chat checks the inventory level of an item</h2>
+    <p class="ask">On the <b>Saybrook College Crewneck</b> product page, the shopper asked:
+      <i>"How many of this crewneck do you have left in large, and what does it cost? Any in XXL?"</i></p>
+
+    <figure>
+      <a href="app_check_images/inventory.png"><img src="app_check_images/inventory.png" alt="Chat reply: the Saybrook College Crewneck costs $58, 2 left in L, sold out in XXL, next to the product page size chart showing L only 2 left and XXL sold out." /></a>
+      <figcaption>
+        The assistant answered <b>"costs $58. We have 2 left in L, and it's sold out in XXL"</b> — the same numbers
+        the product page shows from the database (L "Only 2 left", XXL "Sold out"), so the chat reports honest
+        stock and price rather than guessing.
+      </figcaption>
+    </figure>
+
+    <figure>
+      <a href="app_check_images/inventory_page.jpg"><img src="app_check_images/inventory_page.jpg" alt="Full page: Saybrook College Crewneck product page with the chat panel open on the right." /></a>
+      <figcaption>
+        Full page for context: the chat knew which item "this crewneck" meant because it was asked from that
+        product's page (the panel shows <b>"On this page: Saybrook College Crewneck"</b>).
+      </figcaption>
+    </figure>
+
+    <p class="evidence">
+      <b>Database at the time:</b> <code>catalogue.price = 58.00</code>; <code>inventory</code> for
+      <code>saybrook-college-crewneck</code>: XS 15 · S 15 · M 15 · <b>L 2</b> · XL 15 · <b>XXL 0</b>.<br />
+      <b>Agent run log</b> (<code>agent_runs</code>): this turn called <code>get_product_price("saybrook-college-crewneck")</code>
+      and <code>check_stock("saybrook-college-crewneck")</code> — 9,925 input / 221 output tokens, est. $0.0146.
+    </p>
+  </section>
+
+  <!-- ===================================================================== 2 -->
+  <section class="check" id="cards">
+    <h2><span class="num">02</span>Dynamic search-result cards after a category question</h2>
+    <p class="ask">On the Products page, the shopper asked the chat: <i>"What hoodies do you have?"</i></p>
+
+    <figure>
+      <a href="app_check_images/hoodie_cards.jpg"><img src="app_check_images/hoodie_cards.jpg" alt="Spotlight titled Yale Hoodies showing 12 of 27 matches as product cards with photos, names, prices and short descriptions; chat reply on the right." /></a>
+      <figcaption>
+        The chat replied in text on the right, and the matching products appeared <b>on the page</b> as cards in the
+        Spotlight — <b>"Yale Hoodies · Showing 12 of 27 matches"</b> — each with photo, name, price, short description
+        and honest low-stock badges. The chat text and the product data arrive as separate parts of the API reply.
+      </figcaption>
+    </figure>
+
+    <figure>
+      <a href="app_check_images/hoodie_card_click.jpg"><img src="app_check_images/hoodie_card_click.jpg" alt="Basic Hoodie Big Yale product page opened from the Spotlight card, showing $68.00 and stock for every size." /></a>
+      <figcaption>
+        Clicking the first card (<b>Basic Hoodie Big Yale</b>) opened its single-item page — large image, full
+        description, $68.00 and live stock by size — and the card's "Only 2 left in XL" badge matches the XL stock here.
+      </figcaption>
+    </figure>
+
+    <p class="evidence">
+      <b>Database at the time:</b> 27 products in the Hoodies category (matches "12 of 27");
+      <code>basic-hoodie-big-yale</code> price 68.00, XL stock 2.<br />
+      <b>Agent run log:</b> this turn called <code>search_products(category="Hoodies", limit=12)</code> — 10,792 input /
+      286 output tokens, est. $0.0164. The reply's "See all 27 on Products" link points to <code>/products?category=Hoodies</code>.
+    </p>
+  </section>
+
+  <!-- ===================================================================== 3 -->
+  <section class="check" id="cart">
+    <h2><span class="num">03</span>Problem 9 feature: shopping cart & reserve for pickup</h2>
+    <p class="ask">On the Basic Hoodie Big Yale page the shopper picked size <b>M</b>, quantity <b>2</b>, added it to the
+      cart, opened the cart, and reserved it for in-store pickup.</p>
+
+    <div class="two">
+      <figure>
+        <a href="app_check_images/cart_add.png"><img src="app_check_images/cart_add.png" alt="Product page after adding: confirmation 'Added 2 x M to your cart', cart badge showing 2, size M showing 5 in stock." /></a>
+        <figcaption>
+          <b>Add to cart:</b> "✓ Added 2 × M to your cart" and the 🛍 badge shows <b>2</b>; the quantity picker is
+          capped by the live stock shown for M (5 in stock).
+        </figcaption>
+      </figure>
+      <figure>
+        <a href="app_check_images/cart_page.png"><img src="app_check_images/cart_page.png" alt="Cart page: Basic Hoodie Big Yale size M, quantity 2, $136.00; summary with subtotal $136.00, pay at pickup, Reserve for pickup button." /></a>
+        <figcaption>
+          <b>Cart:</b> the line is re-priced by the server (2 × $68.00 = <b>$136.00</b>) and checked against live
+          stock before the <b>Reserve for pickup</b> button is enabled.
+        </figcaption>
+      </figure>
+    </div>
+
+    <figure>
+      <a href="app_check_images/cart_reserved.jpg"><img src="app_check_images/cart_reserved.jpg" alt="Order confirmation page: Reserved! Boola Boola, Test! Order CC-261023-61FB17, Basic Hoodie Big Yale M x 2, total due at pickup $136.00." /></a>
+      <figcaption>
+        <b>Reserved:</b> the confirmation shows order <b>CC-261023-61FB17</b> for 2 × Basic Hoodie Big Yale (M),
+        <b>$136.00 due at pickup</b> at 57 Broadway — no card details are collected online.
+      </figcaption>
+    </figure>
+
+    <p class="evidence">
+      <b>Database after reserving:</b> <code>orders</code> row <code>CC-261023-61FB17 · reserved · Test User · 2 items · $136.00</code>;
+      <code>order_items</code>: <code>basic-hoodie-big-yale · M · 2 · $68.00</code>; <code>inventory</code> M went from
+      <b>5 → 3</b> (stock is taken off when the order is placed).<br />
+      <b>Clean-up:</b> after the screenshots, this test reservation was cancelled and the 2 units returned, so the live
+      catalogue matches the seed data again (M = 5).
+    </p>
+  </section>
+
+  <footer>
+    Screenshots: <code>output/app_check_images/</code>. Related write-ups: <code>output/harness.md</code> (how it works),
+    <code>output/usability.md</code> (Problem 9), <code>output/design.md</code> (Problem 10).
+    A class project — Campus Customs is a local setting for the course and is not affiliated with this site.
+  </footer>
+</main>
+</body>
+</html>
